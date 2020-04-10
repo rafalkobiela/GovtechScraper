@@ -1,0 +1,51 @@
+version: '3.5'
+services:
+  tika:
+    image: apache/tika
+    ports:
+      - 9998:9998
+    networks:
+      - patent
+
+
+
+  elastic:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.4.0
+    container_name: "elasticsearch"
+    volumes:
+      - /home/rkobiela/projects/govtech_v2/es_volume:/usr/share/elasticsearch/data
+    environment:
+      - discovery.type=single-node
+      - cluster.name=docker-cluster
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xmx4g -Xmx4g"
+      - cluster.routing.allocation.disk.threshold_enabled=true
+      - cluster.routing.allocation.disk.watermark.flood_stage=5gb
+      - cluster.routing.allocation.disk.watermark.low=30gb
+      - cluster.routing.allocation.disk.watermark.high=20gb
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - 9200:9200
+    networks:
+      - patent
+
+
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.4.0
+    environment:
+      - ELASTICSEARCH_URL=http://elastic:9200
+    ports:
+      - 5601:5601
+    networks:
+      - patent
+    depends_on:
+      - elastic
+
+
+networks:
+  patent:
+      name: patent
